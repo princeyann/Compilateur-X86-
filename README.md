@@ -10,7 +10,10 @@ Votre fork doit être PRIVE et vous devez ajouter comme membre en qualité de Ma
 Ensuite vous pourrez faire un clone du “nouveau” dépôt créé, où **monId** est votre identifiant etulab :
 
 ```console
+# Vous demandera votre login/mdp à chaque pull/push
 git clone https://etulab.univ-amu.fr/monId/2025_compilation_X_Y.git
+# Ou alors, si votre clé SSH est bien configurée sur etulab
+git clone git@etulab.univ-amu.fr:monID/2025_compilation_X_Y.git
 ```
 
 Pour donner le nom **squelette**, par exemple, au dépôt d’origine afin de garder le lien avec lui, on fait :
