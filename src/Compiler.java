@@ -30,7 +30,7 @@ public class Compiler
 	public static void main(String[] args) {
 		processCommandLine(args);
 		System.out.println("[BUILD SC] ");
-//		buildSc();
+		buildSc();
 //		System.out.println("[BUILD SA] ");
 //		buildSa();
 //		System.out.println("[BUILD TS] ");
