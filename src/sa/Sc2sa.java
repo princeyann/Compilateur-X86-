@@ -57,10 +57,6 @@ public class Sc2sa extends DepthFirstAdapter
     public void caseAEntierType(AEntierType node)
     {
         inAEntierType(node);
-        if(node.getInt() != null)
-        {
-            node.getInt().apply(this);
-        }
         this.returnType = Type.ENTIER;
         outAEntierType(node);
     }
@@ -68,10 +64,6 @@ public class Sc2sa extends DepthFirstAdapter
     public void caseABoolType(ABoolType node)
     {
         inABoolType(node);
-        if(node.getBool() != null)
-        {
-            node.getBool().apply(this);
-        }
         this.returnType = Type.BOOL;
         outABoolType(node);
     }
@@ -89,10 +81,6 @@ public class Sc2sa extends DepthFirstAdapter
     public void caseATypeopt2Typeopt(ATypeopt2Typeopt node)
     {
         inATypeopt2Typeopt(node);
-        if(node.getEps() != null)
-        {
-            node.getEps().apply(this);
-        }
         this.returnType = Type.NUL;
         outATypeopt2Typeopt(node);
     }
@@ -864,11 +852,13 @@ public class Sc2sa extends DepthFirstAdapter
         SaLDecVar op1 = null;
         SaLDecVar op2 = null;
         SaInst op3 = null;
+        Type type =null;
 
         inADefinitionFonctionDf(node);
         if(node.getTypeopt() != null)
         {
             node.getTypeopt().apply(this);
+            type = this.returnType;
         }
         if(node.getIdentifiant() != null)
         {
@@ -897,7 +887,7 @@ public class Sc2sa extends DepthFirstAdapter
             node.getBloc().apply(this);
             op3 = (SaInst) this.returnValue;
         }
-        this.returnValue = new SaDecFonc(id,this.returnType,op1,op2,op3);
+        this.returnValue = new SaDecFonc(id,type,op1,op2,op3);
         outADefinitionFonctionDf(node);
     }
 
