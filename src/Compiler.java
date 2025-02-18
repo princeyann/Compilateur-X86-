@@ -31,8 +31,8 @@ public class Compiler
 		processCommandLine(args);
 		System.out.println("[BUILD SC] ");
 		buildSc();
-//		System.out.println("[BUILD SA] ");
-//		buildSa();
+		System.out.println("[BUILD SA] ");
+		buildSa();
 //		System.out.println("[BUILD TS] ");
 //		buildTs();
 //		System.out.println("[TYPE CHECKING]");
