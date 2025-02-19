@@ -338,8 +338,8 @@ public class Sc2sa extends DepthFirstAdapter
         }
         if(node.getExp3() != null)
         {
-            op2 = (SaExp) this.returnValue;
             node.getExp3().apply(this);
+            op2 = (SaExp) this.returnValue;
         }
         this.returnValue = new SaExpEqual(op1, op2);
         outAEgalExp2(node);
@@ -560,11 +560,14 @@ public class Sc2sa extends DepthFirstAdapter
     //{appel_fonction} appel_fonction
     public void caseAAppelFonctionExp6(AAppelFonctionExp6 node)
     {
+        SaAppel appel = null;
         inAAppelFonctionExp6(node);
         if(node.getAppelFonction() != null)
         {
             node.getAppelFonction().apply(this);
+            appel = (SaAppel) this.returnValue;
         }
+        this.returnValue = new SaExpAppel(appel);
         outAAppelFonctionExp6(node);
     }
 
