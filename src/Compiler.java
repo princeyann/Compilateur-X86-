@@ -33,8 +33,8 @@ public class Compiler
 		buildSc();
 		System.out.println("[BUILD SA] ");
 		buildSa();
-//		System.out.println("[BUILD TS] ");
-//		buildTs();
+		System.out.println("[BUILD TS] ");
+		buildTs();
 //		System.out.println("[TYPE CHECKING]");
 //		typeCheck();
 //		System.out.println("[BUILD C3A] ");
