@@ -1,6 +1,7 @@
 package ts;
 import sa.*;
 import util.Error;
+import util.Type;
 
 public class Sa2ts extends SaDepthFirstVisitor <Void> {
     enum Context {
@@ -11,7 +12,7 @@ public class Sa2ts extends SaDepthFirstVisitor <Void> {
     
     private Ts tableGlobale;
     private Ts tableLocaleCourante;
-    private Context context; //si on est dans une decfonc on le fait passé a context a local 
+    private Context context;
     
     public Ts getTableGlobale(){return this.tableGlobale;}
 
@@ -33,122 +34,85 @@ public class Sa2ts extends SaDepthFirstVisitor <Void> {
     }
 
 
-    public Void visit(SaDecVar node) throws Exception {
-        // Récupérer l'identifiant de la variable
+    public Void visit(SaDecVar node) throws ErrorException {
         String identif = node.getNom();
+        Type type = node.getType();
 
-
-
-
-        // Vérifier dans quel contexte on se trouve (global, local ou paramètre)
-        switch (context) {
-            case GLOBAL:
-                // Vérifier si la variable existe déjà dans la table globale
-                if (tableGlobale.getVar(identif) != null) {
-                    throw new Exception("Erreur: Variable " + identif + " déjà déclarée dans la portée globale.");
-                }
-                tableGlobale.addVar(identif, node.getType());
-                break;
-
-            case LOCAL:
-                // Vérifier si la variable existe déjà dans la table locale
-                if (tableLocaleCourante.getVar(identif) != null) {
-                    throw new Exception("Erreur: Variable " + identif + " déjà déclarée dans la portée locale.");
-                }
-                tableLocaleCourante.addVar(identif, node.getType());
-                break;
-
-            case PARAM:
-                // Vérifier si le paramètre est déjà déclaré
-                if (tableLocaleCourante.getVar(identif) != null) {
-                    throw new Exception("Erreur: Paramètre " + identif + " déjà déclaré dans la fonction.");
-                }
-                tableLocaleCourante.addParam(identif, node.getType());
-                break;
+        Ts currentTable = tableGlobale;
+        if (context != Context.GLOBAL){
+            currentTable = tableLocaleCourante;
+        }
+        if(currentTable.getVar(identif) != null){
+            throw new ErrorException(Error.TS, "Erreur: Variable " + identif + " déjà déclarée.");
+        }
+        if (context == Context.GLOBAL){
+            tableGlobale.addVar(identif, type);
+        }else if(context == Context.LOCAL) {
+            tableLocaleCourante.addVar(identif, type);
+        }else if(context == Context.PARAM){
+            tableLocaleCourante.addParam(identif, type);
         }
 
         return null;
     }
     public Void visit(SaDecTab node) throws Exception {
-// Récupérer l'identifiant du tableau
         String identif = node.getNom();
         int taille = node.getTaille();
+        Type type = node.getType();
+
         if (taille<0){
-            throw new Exception("Erreur: la taille doit etre positive.");
+            throw new ErrorException(Error.TS,"Erreur: la taille doit etre positive.");
         }
-
-
-        switch (context) {
-            case GLOBAL:
-                // Vérifier si la variable existe déjà dans la table globale
-                if (tableGlobale.getVar(identif) != null) {
-                    throw new Exception("Erreur: Variable " + identif + " déjà déclarée dans la portée globale.");
-                }
-                tableGlobale.addTab(identif,node.getType(), taille);
-                break;
-
-            case LOCAL:
-                // Vérifier si la variable existe déjà dans la table locale
-                if (tableLocaleCourante.getVar(identif) != null) {
-                    throw new Exception("Erreur: Variable " + identif + " déjà déclarée dans la portée locale.");
-                }
-                tableLocaleCourante.addTab(identif,node.getType(), taille);
-                break;
-
-            case PARAM:
-                // Vérifier si le paramètre est déjà déclaré
-                if (tableLocaleCourante.getVar(identif) != null) {
-                    throw new Exception("Erreur: Paramètre " + identif + " déjà déclaré dans la fonction.");
-                }
-                tableLocaleCourante.addTab(identif,node.getType(), taille);
-                break;
+        Ts currentTable = tableGlobale;
+        if (context != Context.GLOBAL){
+            currentTable = tableLocaleCourante;
         }
+        if (currentTable.getVar(identif) != null){
+            throw new ErrorException(Error.TS,"Erreur l'id "+identif+" existe déja." );
+        }
+        TsItemVarTab tsItemVarTab = null;
+        if (context == Context.GLOBAL){
+            tsItemVarTab= (TsItemVarTab) tableGlobale.addTab(identif,type,taille);
+        }else {
 
+            tsItemVarTab = (TsItemVarTab) tableLocaleCourante.addTab(identif,type,taille);
+        }
+        node.tsItem = tsItemVarTab;
         return null;
-
     }
 
 
-    public Void visit(SaDecFonc node)  throws Exception {
-        // Récupérer l'identifiant de la fonction
+    public Void visit(SaDecFonc node) throws Exception {
         String identif = node.getNom();
         SaLDecVar params = node.getParametres();
         SaInst bloc = node.getCorps();
+        Type typeRetour = node.getTypeRetour();
 
-        // Vérifier si la fonction existe déjà dans la table globale
         if (tableGlobale.getFct(identif) != null) {
-            throw new Exception("Erreur: Fonction " + identif + " déjà déclarée.");
+            throw new ErrorException(Error.TS,"Erreur: Fonction " + identif + " déjà déclarée.");
         }
-
-        // Créer une nouvelle table des symboles locale pour la fonction
-        Ts tableLocale = new Ts();
-
-        // Sauvegarder l'ancienne table locale et mettre à jour le contexte
         Ts ancienneTableLocale = tableLocaleCourante;
-        tableLocaleCourante = tableLocale;
+        tableLocaleCourante = new Ts();
         Context ancienContexte = context;
         context = Context.PARAM;
 
-        // Ajouter les paramètres à la table locale
-        if (params != null) {
+        if (params != null){
             params.accept(this);
         }
 
-        // Passer au contexte LOCAL pour ajouter les variables locales
         context = Context.LOCAL;
-        if (node.getVariable() != null) {
-            node.accept(this);
+        if (node.getVariable() != null){
+            node.getVariable().accept(this);
         }
+        TsItemFct fonction = tableGlobale.addFct(identif,typeRetour,(params != null ? params.length() : 0),tableLocaleCourante,node);
 
-        // Ajouter la fonction à la table globale
-        tableGlobale.addFct(identif, node.getTypeRetour(), (params != null ? params.length() : 0), tableLocale, node);
-
-        // Visiter le bloc de la fonction
         if (bloc != null) {
             bloc.accept(this);
         }
-
-        // Restaurer l'ancienne table locale et le contexte
+        node.tsItem = fonction;
+        if (node.tsItem == null){
+            throw new ErrorException(Error.TS,"Erreur linkage dans SaDecFonc");
+        }
         tableLocaleCourante = ancienneTableLocale;
         context = ancienContexte;
 
@@ -157,25 +121,67 @@ public class Sa2ts extends SaDepthFirstVisitor <Void> {
 
 
     public Void visit(SaVarSimple node) throws Exception {
-        // Récupérer l'identifiant de la variable
         String identif = node.getNom();
         TsItemVar var = null;
-
-        // Vérifier dans l'ordre : locale -> paramètre -> globale
         if (tableLocaleCourante != null) {
             var = tableLocaleCourante.getVar(identif);
         }
         if (var == null) {
             var = tableGlobale.getVar(identif);
         }
-
-        // Si la variable n'existe pas, lever une erreur
         if (var == null) {
-            throw new Exception("Erreur: Variable " + identif + " non déclarée.");
+            throw new ErrorException(Error.TS,"Erreur: Variable " + identif + " non déclarée.");
         }
+        node.tsItem = (TsItemVarSimple) var;
 
         return null;
     }
+    public Void visit(SaVarIndicee node) throws Exception {
+        String identif = node.getNom();
+
+        TsItemVar var = (tableLocaleCourante != null) ? tableLocaleCourante.getVar(identif) : null;
+        if (var == null) var = tableGlobale.getVar(identif);
+
+        if (var == null) {
+            throw new ErrorException(Error.TS, "Tableau non déclaré : " + identif);
+        }
+        if (!(var instanceof TsItemVarTab)) {
+            throw new ErrorException(Error.TS, "La variable " + identif + " n'est pas un tableau.");
+        }
+
+        if (node.getIndice() != null) {
+            node.getIndice().accept(this);
+        } else {
+            throw new ErrorException(Error.TS, "Un tableau doit être indexé.");
+        }
+        node.tsItem = var;
+
+        return null;
+    }
+    public Void visit(SaAppel node) throws Exception {
+        String identif = node.getNom();
+        TsItemFct fonction = tableGlobale.getFct(identif);
+
+        if (fonction == null) {
+            throw new ErrorException(Error.TS, "la fonction "+ identif+ " n'est pas déclarée " );
+        }
+
+        int nbArgsAppeles = 0;
+        if (node.getArguments() != null){
+            nbArgsAppeles = node.getArguments().length();
+        }
+        if (nbArgsAppeles != fonction.getNbArgs()) {
+            throw new ErrorException(Error.TS, "Mauvais nombre d'arguments pour la fonction " + identif +" attendu :" +fonction.nbArgs +" est la valeur est :"+ nbArgsAppeles);
+        }
+
+        if (node.getArguments() != null) {
+            node.getArguments().accept(this);
+        }
+        node.tsItem = fonction;
+
+        return null;
+    }
+
 
 
 }
