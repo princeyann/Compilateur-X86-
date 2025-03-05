@@ -11,7 +11,7 @@ public class Sa2ts extends SaDepthFirstVisitor <Void> {
     
     private Ts tableGlobale;
     private Ts tableLocaleCourante;
-    private Context context;
+    private Context context; //si on est dans une decfonc on le fait passé a context a local 
     
     public Ts getTableGlobale(){return this.tableGlobale;}
 
