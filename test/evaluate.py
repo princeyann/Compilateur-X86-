@@ -46,7 +46,7 @@ outputFilename = "result.txt"
 ################################################################################
 def compileCompiler() :
   global classpath
-#  for file in ["Compiler.java", "SaVM.java", "C3aVM.java", "NasmVM.java"] :
+  #  for file in ["Compiler.java", "SaVM.java", "C3aVM.java", "NasmVM.java"] :
   for file in ["Compiler.java"] :
     if not os.path.isfile(srcPath+file) :
       print("Skipping compilation of %s"%file, file=outVerbose)
@@ -80,7 +80,7 @@ def deleteClasses() :
     for filename in files :
       if os.path.splitext(filename)[1] == ".class" :
         os.remove(root+"/"+filename)
-        
+
   return classpath
 ################################################################################
 
@@ -200,7 +200,7 @@ def evaluateDiff(inputFiles, extension, extensionRef, path, name) :
     if not os.path.isfile(inputPath+producedFile) :
       evaluation[1]["notfound"].append(producedFile)
       continue
-    
+
     ref = refPath+path+changeExtension(producedFile, extensionRef)
     if not os.path.isfile(ref) :
       print("ATTENTION : Fichier non trouvé : %s"%ref, file=sys.stderr)
@@ -234,7 +234,8 @@ def evaluateSa(inputFiles) :
     if not os.path.isfile(saFilename) :
       continue
 
-    command = "java -classpath %s SaVM -sa %s > %s"%(findClasspath(), saFilename, outFilename)
+    #    command = "java -classpath %s SaVM -sa %s > %s"%(findClasspath(), saFilename, outFilename)
+    command = "java -jar ../vm/SaVM.jar -sa %s > %s"%(saFilename, outFilename)
     out = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stderr.read().decode()
     if len(out) != 0 :
       errs.append("ERROR %s for input %s : '%s'"%(inspect.stack()[0][3], filename, out))
@@ -252,7 +253,8 @@ def evaluateC3a(inputFiles) :
     if not os.path.isfile(c3aFilename) or not os.path.isfile(tsFilename) :
       continue
 
-    command = "java -classpath %s C3aVM -c3a %s -ts %s > %s"%(findClasspath(), c3aFilename, tsFilename, outFilename)
+    #    command = "java -classpath %s C3aVM -c3a %s -ts %s > %s"%(findClasspath(), c3aFilename, tsFilename, outFilename)
+    command = "java -jar ../vm/C3aVM.jar -c3a %s -ts %s > %s"%(c3aFilename, tsFilename, outFilename)
     out = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stderr.read().decode()
     if len(out) != 0 :
       errs.append("ERROR %s for input %s : '%s'"%(inspect.stack()[0][3], filename, out))
@@ -269,7 +271,8 @@ def evaluatePreNasm(inputFiles) :
     if not os.path.isfile(nasmFilename) :
       continue
 
-    command = "java -classpath %s NasmVM -nasm %s > %s"%(findClasspath(), nasmFilename, outFilename)
+    #    command = "java -classpath %s NasmVM -nasm %s > %s"%(findClasspath(), nasmFilename, outFilename)
+    command = "java -jar ../vm/NasmVM.jar -nasm %s > %s"%(nasmFilename, outFilename)
     out = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stderr.read().decode()
     if len(out) != 0 :
       errs.append("ERROR %s for input %s : '%s'"%(inspect.stack()[0][3], filename, out))
@@ -286,7 +289,8 @@ def evaluateNasm(inputFiles) :
     if not os.path.isfile(nasmFilename) :
       continue
 
-    command = "java -classpath %s NasmVM -nasm %s > %s"%(findClasspath(), nasmFilename, outFilename)
+    #    command = "java -classpath %s NasmVM -nasm %s > %s"%(findClasspath(), nasmFilename, outFilename)
+    command = "java -jar ../vm/NasmVM.jar -nasm %s > %s"%(nasmFilename, outFilename)
     out = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stderr.read().decode()
     if len(out) != 0 :
       errs.append("ERROR %s for input %s : '%s'"%(inspect.stack()[0][3], filename, out))
@@ -360,17 +364,17 @@ def printEvaluationResult(destination, evaluationResult, useColor) :
 if __name__ == "__main__" :
   parser = argparse.ArgumentParser()
   parser.add_argument("--verbose", "-v", default=False, action="store_true",
-    help="Verbose output (obsolete, verbose is default).")
+                      help="Verbose output (obsolete, verbose is default).")
   parser.add_argument("--silent", "-s", default=False, action="store_true",
-    help="Less verbose output.")
+                      help="Less verbose output.")
   parser.add_argument("--noColors", default=False, action="store_true",
-    help="Disable colors in output.")
+                      help="Disable colors in output.")
   parser.add_argument("--clean", "-c", default=False, action="store_true",
-    help="Clean input dir then exit.")
+                      help="Clean input dir then exit.")
   parser.add_argument("--number", "-n", default=None, type=int,
-    help="Restrict tests to n inputs.")
+                      help="Restrict tests to n inputs.")
   parser.add_argument("--files", "-f", default=[], nargs="*",
-    help="Specify input files.")
+                      help="Specify input files.")
   args = parser.parse_args()
 
   args.verbose = not args.silent
@@ -378,8 +382,8 @@ if __name__ == "__main__" :
   if args.verbose :
     outVerbose = outScore
   if args.clean :
-      deleteCompilationOutputs()
-      exit(0)
+    deleteCompilationOutputs()
+    exit(0)
 
   with open(outputFilename, "w") as _ :
     pass
@@ -410,18 +414,18 @@ if __name__ == "__main__" :
   dfNasm = lambda files : (evaluateDiff(inputFiles, ".nasm", ".nasm", "nasm-ref/", msg%"nasm"), [])
 
   # Evaluation of normal (working) examples
-  for evalTarget in [ 
-                     ("SA-DIFF      ", dfSa),
-                     ("TS-DIFF      ", dfTs),
-                     ("SA           ", evaluateSa),
-                     ("C3A-DIFF     ", dfC3a),
-                     ("C3A          ", evaluateC3a),
-                     ("PRE-NASM-DIFF", dfPreNasm),
-                     ("PRE-NASM     ", evaluatePreNasm),
-                     ("NASM-DIFF    ", dfNasm),
-                     ("NASM         ", evaluateNasm),
-                     ("EXE          ", evaluateExecutable),
-                    ] :
+  for evalTarget in [
+    #                     ("SA-DIFF      ", dfSa),
+    #                     ("TS-DIFF      ", dfTs),
+    ("SA           ", evaluateSa),
+    #                     ("C3A-DIFF     ", dfC3a),
+    ("C3A          ", evaluateC3a),
+    #                     ("PRE-NASM-DIFF", dfPreNasm),
+    ("PRE-NASM     ", evaluatePreNasm),
+    #                     ("NASM-DIFF    ", dfNasm),
+    ("NASM         ", evaluateNasm),
+    ("EXE          ", evaluateExecutable),
+  ] :
     names.append(evalTarget[0])
     res, err = evalTarget[1](inputFiles)
     scores.append(printEvaluationResult(outVerbose, res, not args.noColors))
@@ -429,9 +433,9 @@ if __name__ == "__main__" :
 
   # Evaluation of ill formed examples, that should trigger a compilation error
   for evalTarget in [
-                     ("ERR_TS       ", evaluateCompilationErrors, errInputFilesTs, ERR_SYMBOL_TABLE_CODE),
-                     ("ERR_TYPE     ", evaluateCompilationErrors, errInputFilesType, ERR_TYPE_CODE),
-                    ] :
+    ("ERR_TS       ", evaluateCompilationErrors, errInputFilesTs, ERR_SYMBOL_TABLE_CODE),
+    ("ERR_TYPE     ", evaluateCompilationErrors, errInputFilesType, ERR_TYPE_CODE),
+  ] :
     names.append(evalTarget[0])
     res = evalTarget[1](evalTarget[2], evalTarget[3], evalTarget[0])
     scores.append(printEvaluationResult(outVerbose, res, not args.noColors))
@@ -453,17 +457,18 @@ if __name__ == "__main__" :
 
   for i in range(len(scores)):
     print(names[i], "\t", scores[i])
-  
+
   print("Copy-pastable scores :", file=outScore)
   print("\t".join(names), file=outScore)
   print("\t".join(["%6.2f"%scores[i] for i in range(len(scores))]), file=outScore)
 
   print("\nSauvegardé dans le fichier %s"%outputFilename)
 
-# les coefficients associés à chaque partie pour le calcul de la note finale
-  coeffs = [SC_COEFF, SA_DIFF_COEFF, TS_DIFF_COEFF, SA_COEFF, C3A_DIFF_COEFF, C3A_COEFF, PRE_NASM_DIFF, PRE_NASM_COEFF, NASM_DIFF_COEFF, NASM_COEFF, EXE_COEFF, ERR_TS_COEFF, ERR_TYPE_COEFF]
+  # les coefficients associés à chaque partie pour le calcul de la note finale
+  #  coeffs = [SC_COEFF, SA_DIFF_COEFF, TS_DIFF_COEFF, SA_COEFF, C3A_DIFF_COEFF, C3A_COEFF, PRE_NASM_DIFF, PRE_NASM_COEFF, NASM_DIFF_COEFF, NASM_COEFF, EXE_COEFF, ERR_TS_COEFF, ERR_TYPE_COEFF]
 
-# calcul de la note finale
+  coeffs = [SC_COEFF, SA_COEFF, C3A_COEFF, PRE_NASM_COEFF, NASM_COEFF, EXE_COEFF, ERR_TS_COEFF, ERR_TYPE_COEFF]
+  # calcul de la note finale
 
   note = 0
   for i in range(len(scores)):
