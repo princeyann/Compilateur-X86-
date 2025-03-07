@@ -38,5 +38,100 @@ public class SaTypeCheck extends SaDepthFirstVisitor <Void>{
 		defaultOut(node);
 		return null;
     }
+	public Void visit(SaExpInf node) throws Exception{
+		defaultIn(node);
+		node.getOp1().accept(this);
+		node.getOp2().accept(this);
+		if(!Type.checkCompatibility(node.getOp1().getType(), Type.ENTIER) ||
+				!Type.checkCompatibility(node.getOp2().getType(),Type.ENTIER))
+			throw new ErrorException(Error.TYPE, "exp inferieur");
+		defaultOut(node);
+		return null;
+	}
+	public Void visit(SaExpAnd node) throws Exception{
+		defaultIn(node);
+		node.getOp1().accept(this);
+		node.getOp2().accept(this);
+		if(!Type.checkCompatibility(node.getOp1().getType(), Type.BOOL) ||
+				!Type.checkCompatibility(node.getOp2().getType(),Type.BOOL))
+			throw new ErrorException(Error.TYPE, "exp et");
+		defaultOut(node);
+		return null;
+	}
+	public Void visit(SaExpOr node) throws Exception{
+		defaultIn(node);
+		node.getOp1().accept(this);
+		node.getOp2().accept(this);
+		if(!Type.checkCompatibility(node.getOp1().getType(), Type.BOOL) ||
+				!Type.checkCompatibility(node.getOp2().getType(),Type.BOOL))
+			throw new ErrorException(Error.TYPE, "exp ou");
+		defaultOut(node);
+		return null;
+	}
+	public Void visit(SaExpEqual node) throws Exception{
+		defaultIn(node);
+		node.getOp1().accept(this);
+		node.getOp2().accept(this);
+		if(Type.checkCompatibility(node.getOp1().getType(), Type.BOOL) &&
+				Type.checkCompatibility(node.getOp2().getType(),Type.ENTIER))
+			throw new ErrorException(Error.TYPE, "exp egal");
+		else if (Type.checkCompatibility(node.getOp1().getType(), Type.ENTIER) &&
+				Type.checkCompatibility(node.getOp2().getType(),Type.BOOL)) {
+			throw new ErrorException(Error.TYPE, "exp egal");
+		}
+		defaultOut(node);
+		return null;
+	}
+	public Void visit(SaExpSub node) throws Exception{
+		defaultIn(node);
+		node.getOp1().accept(this);
+		node.getOp2().accept(this);
+		if (!Type.checkCompatibility(node.getOp1().getType(), Type.ENTIER) ||
+		!Type.checkCompatibility(node.getOp2().getType(),Type.ENTIER)) {
+			throw new ErrorException(Error.TYPE, "exp soustraction");
+		}
+		defaultOut(node);
+		return null;
+	}
+	public Void visit(SaExpDiv node) throws Exception{
+		defaultIn(node);
+		node.getOp1().accept(this);
+		node.getOp2().accept(this);
+		if (!Type.checkCompatibility(node.getOp1().getType(),Type.ENTIER) ||
+		!Type.checkCompatibility(node.getOp2().getType(),Type.ENTIER)) {
+			throw new ErrorException(Error.TYPE, "exp division");
+		}
+		defaultOut(node);
+		return null;
+	}
+	public Void visit(SaExpMult node) throws Exception{
+		defaultIn(node);
+		node.getOp1().accept(this);
+		node.getOp2().accept(this);
+		if (!Type.checkCompatibility(node.getOp1().getType(),Type.ENTIER) ||
+		!Type.checkCompatibility(node.getOp2().getType(),Type.ENTIER)) {
+			throw new ErrorException(Error.TYPE, "exp mult");
+		}
+		defaultOut(node);
+		return null;
+	}
+	public Void visit(SaInstSi node) throws Exception{
+		defaultIn(node);
+		if (!Type.checkCompatibility(node.getTest().getType(),Type.BOOL)) {
+			throw new ErrorException(Error.TYPE, "instruction if");
+		}
+		defaultOut(node);
+		return null;
+	}
+	public Void visit(SaInstTantQue node) throws Exception{
+		defaultIn(node);
+		if (!Type.checkCompatibility(node.getTest().getType(),Type.BOOL)) {
+			throw new ErrorException(Error.TYPE, "instruction tant que");
+		}
+		defaultOut(node);
+		return null;
+	}
+
+
 
 }
