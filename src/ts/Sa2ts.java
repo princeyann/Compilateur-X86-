@@ -110,9 +110,6 @@ public class Sa2ts extends SaDepthFirstVisitor <Void> {
             bloc.accept(this);
         }
         node.tsItem = fonction;
-        if (node.tsItem == null){
-            throw new ErrorException(Error.TS,"Erreur linkage dans SaDecFonc");
-        }
         tableLocaleCourante = ancienneTableLocale;
         context = ancienContexte;
 
