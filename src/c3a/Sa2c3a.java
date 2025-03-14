@@ -97,11 +97,16 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
     }
 
     public C3aOperand visit(SaExpVrai node) throws Exception {
-        return new C3aBooleanConstant(node.getVal());
+
+
+            return new C3aConstant(1);
+
     }
 
     public C3aOperand visit(SaExpFaux node) throws Exception {
-        return new C3aBooleanConstant(node.getVal());
+
+            return new C3aConstant(0);
+
     }
 
     public C3aOperand visit(SaInstEcriture node) throws Exception {
@@ -158,9 +163,16 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
         C3aOperand op = node.getTest().accept(this);
         C3aLabel etiquette0 = c3a.newAutoLabel();
         C3aLabel etiquette1 = c3a.newAutoLabel();
+
         c3a.ajouteInst(new C3aInstJumpIfEqual(op,c3a.False , etiquette0,""));
         node.getAlors().accept(this);
         c3a.ajouteInst(new C3aInstJump(etiquette1,""));
+        c3a.addLabelToNextInst(etiquette0);
+         if (node.getSinon() != null) {
+             node.getSinon().accept(this);
+
+         }
+         c3a.addLabelToNextInst(etiquette1);
         return op;
 
     }
