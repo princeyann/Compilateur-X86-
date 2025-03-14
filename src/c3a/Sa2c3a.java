@@ -1,7 +1,7 @@
 package c3a;
 import ts.*;
 import sa.*;
-import util.Error;
+
 
 public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
     private C3a c3a;
@@ -97,11 +97,11 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
     }
 
     public C3aOperand visit(SaExpVrai node) throws Exception {
-        return new C3aBooleanConstant(node.getVal());
+        return new C3aConstant(1);
     }
 
     public C3aOperand visit(SaExpFaux node) throws Exception {
-        return new C3aBooleanConstant(node.getVal());
+        return new C3aConstant(0);
     }
 
     public C3aOperand visit(SaInstEcriture node) throws Exception {
@@ -110,14 +110,17 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
         c3a.ajouteInst(new C3aInstWrite(op, ""));
 
         defaultOut(node);
-        return op;
+        return null;
     }
-
+    public C3aOperand visit(SaExpVar node) throws Exception {
+        return node.getVar().accept(this);
+    }
     public C3aOperand visit(SaDecFonc node) throws Exception {
         defaultIn(node);
 
         TsItemFct fonction = node.tsItem;
-        c3a.ajouteInst(new C3aInstFBegin(fonction, "entree fonction"));
+
+        c3a.ajouteInst(new C3aInstFBegin(fonction, "entree fonction"+ fonction.getIdentif()));
         if (node.getParametres() != null) {
             node.getParametres().accept(this);
         }
@@ -127,22 +130,24 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
         if (node.getVariable() != null) {
             node.getVariable().accept(this);
         }
-        c3a.ajouteInst(new C3aInstFEnd(""));
+        c3a.ajouteInst(new C3aInstFEnd(" "+ fonction.getIdentif()));
         defaultOut(node);
         return null;
     }
 
     public C3aOperand visit(SaAppel node) throws Exception {
+        defaultIn(node);
         C3aFunction func = new C3aFunction(node.tsItem);
-        C3aOperand result = c3a.newTemp();
 
         SaLExp args = node.getArguments();
+        C3aOperand result = c3a.newTemp();
         while (args != null) {
-            C3aOperand arg = node.getArguments().getTete().accept(this);
+            C3aOperand arg = args.getTete().accept(this);
             c3a.ajouteInst(new C3aInstParam(arg, ""));
             args = args.getQueue();
         }
         c3a.ajouteInst(new C3aInstCall(func, result, ""));
+        defaultOut(node);
         return result;
     }
 
@@ -161,9 +166,114 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
         c3a.ajouteInst(new C3aInstJumpIfEqual(op,c3a.False , etiquette0,""));
         node.getAlors().accept(this);
         c3a.ajouteInst(new C3aInstJump(etiquette1,""));
-        return op;
+        c3a.addLabelToNextInst(etiquette0);
+        if (node.getSinon() != null) {
+            node.getSinon().accept(this);
+        }
+        c3a.addLabelToNextInst(etiquette1);
+        defaultOut(node);
+        return null;
+    }
+    public C3aOperand visit(SaInstTantQue node) throws Exception {
+        defaultIn(node);
+
+        C3aLabel etiquette0 = c3a.newAutoLabel();
+        C3aLabel etiquette1 = c3a.newAutoLabel();
+        c3a.addLabelToNextInst(etiquette0);
+        C3aOperand op = node.getTest().accept(this);
+
+        c3a.ajouteInst(new C3aInstJumpIfEqual(op,c3a.False , etiquette1,""));
+        node.getFaire().accept(this);
+        c3a.ajouteInst(new C3aInstJump(etiquette0,""));
+        c3a.addLabelToNextInst(etiquette1);
+        defaultOut(node);
+        return null;
 
     }
+    public C3aOperand visit(SaExpAnd node) throws Exception {
+        defaultIn(node);
+        C3aOperand op1 = node.getOp1().accept(this);
+
+        C3aLabel ettiquette0 = c3a.newAutoLabel();
+        C3aLabel ettiquette1 = c3a.newAutoLabel();
+        C3aOperand temps = c3a.newTemp();
+        c3a.ajouteInst(new C3aInstJumpIfEqual(op1,c3a.False , ettiquette0,""));
+        C3aOperand op2 = node.getOp2().accept(this);
+
+        c3a.ajouteInst(new C3aInstJumpIfEqual(op2,c3a.False , ettiquette0,""));
+        c3a.ajouteInst(new C3aInstAffect(c3a.True,temps,""));
+        c3a.ajouteInst(new C3aInstJump(ettiquette1,""));
+        c3a.addLabelToNextInst(ettiquette0);
+        c3a.ajouteInst(new C3aInstAffect(c3a.False,temps,""));
+        c3a.addLabelToNextInst(ettiquette1);
+        return temps;
+    }
+
+    public C3aOperand visit(SaExpNot node) throws Exception {
+        defaultIn(node);
+        C3aOperand op1 = node.getOp1().accept(this);
+        C3aLabel ettiquette0 = c3a.newAutoLabel();
+        C3aOperand temps = c3a.newTemp();
+        c3a.ajouteInst(new C3aInstAffect(c3a.True,temps,""));
+        c3a.ajouteInst(new C3aInstJumpIfEqual(op1,c3a.False , ettiquette0,""));
+        c3a.ajouteInst(new C3aInstAffect(c3a.False,temps,""));
+        c3a.addLabelToNextInst(ettiquette0);
+        defaultOut(node);
+        return temps;
+    }
+    public C3aOperand visit(SaExpInf node) throws Exception {
+        defaultIn(node);
+        C3aOperand op1 = node.getOp1().accept(this);
+        C3aOperand op2 = node.getOp2().accept(this);
+        C3aLabel ettiquette0 = c3a.newAutoLabel();
+        C3aOperand temps = c3a.newTemp();
+        c3a.ajouteInst(new C3aInstAffect(c3a.True,temps,""));
+        c3a.ajouteInst(new C3aInstJumpIfLess(op1,op2,ettiquette0,""));
+        c3a.ajouteInst(new C3aInstAffect(c3a.False,temps,""));
+        c3a.addLabelToNextInst(ettiquette0);
+        return temps;
+    }
+    public C3aOperand visit(SaExpOr node) throws Exception {
+        defaultIn(node);
+        C3aOperand op1 = node.getOp1().accept(this);
+        C3aLabel ettiquette0 = c3a.newAutoLabel();
+
+        C3aLabel ettiquette1 = c3a.newAutoLabel();
+        C3aOperand temps = c3a.newTemp();
+        c3a.ajouteInst(new C3aInstJumpIfEqual(op1, c3a.True, ettiquette1, ""));
+        C3aOperand op2 = node.getOp2().accept(this);
+        c3a.ajouteInst(new C3aInstJumpIfEqual(op2, c3a.True, ettiquette1, ""));
+
+        c3a.ajouteInst(new C3aInstAffect(c3a.False, temps, ""));
+        c3a.ajouteInst(new C3aInstJump(ettiquette0, ""));
+        c3a.addLabelToNextInst(ettiquette1);
+        c3a.ajouteInst(new C3aInstAffect(c3a.True, temps, ""));
+
+        c3a.addLabelToNextInst(ettiquette0);
+
+        defaultOut(node);
+        return temps;
+    }
+
+    public C3aOperand visit(SaVarIndicee node)throws Exception {
+        defaultIn(node);
+        TsItemVar tableau = node.tsItem;
+        C3aOperand op1 = node.getIndice().accept(this);
+        return new C3aVar(tableau, op1);
+    }
+    public C3aOperand visit(SaExpEqual node) throws Exception {
+        defaultIn(node);
+        C3aLabel ettiquette0 = c3a.newAutoLabel();
+        C3aOperand op1 = node.getOp1().accept(this);
+        C3aOperand op2 = node.getOp2().accept(this);
+        C3aOperand temps = c3a.newTemp();
+        c3a.ajouteInst(new C3aInstAffect(c3a.True,temps,""));
+        c3a.ajouteInst(new C3aInstJumpIfEqual(op1,op2,ettiquette0,""));
+        c3a.ajouteInst(new C3aInstAffect(c3a.False,temps,""));
+        c3a.addLabelToNextInst(ettiquette0);
+        return temps;
+    }
+
 
 
 
