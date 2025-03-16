@@ -120,7 +120,7 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
 
         TsItemFct fonction = node.tsItem;
 
-        c3a.ajouteInst(new C3aInstFBegin(fonction, "entree fonction"+ fonction.getIdentif()));
+        c3a.ajouteInst(new C3aInstFBegin(fonction, "entree fonction"));
         if (node.getParametres() != null) {
             node.getParametres().accept(this);
         }
@@ -130,7 +130,7 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
         if (node.getVariable() != null) {
             node.getVariable().accept(this);
         }
-        c3a.ajouteInst(new C3aInstFEnd(" "+ fonction.getIdentif()));
+        c3a.ajouteInst(new C3aInstFEnd(""));
         defaultOut(node);
         return null;
     }
@@ -272,6 +272,13 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
         c3a.ajouteInst(new C3aInstAffect(c3a.False,temps,""));
         c3a.addLabelToNextInst(ettiquette0);
         return temps;
+    }
+    public C3aOperand visit(SaExpAppel node) throws Exception {
+        defaultIn(node);
+        C3aOperand op = node.getVal().accept(this);
+
+        defaultOut(node);
+        return op;
     }
 
 
