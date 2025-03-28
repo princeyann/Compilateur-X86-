@@ -39,8 +39,8 @@ public class Compiler
 		typeCheck();
 		System.out.println("[BUILD C3A] ");
 		buildC3a();
-//		System.out.println("[BUILD PRE NASM] ");
-//		buildPreNasm();
+		System.out.println("[BUILD PRE NASM] ");
+		buildPreNasm();
 //		System.out.println("[BUILD FLOW GRAPH] ");
 //		buildFg();
 //		System.out.println("[SOLVE FLOW GRAPH]");

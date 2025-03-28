@@ -32,7 +32,12 @@ public class C3a2nasm implements C3aVisitor <NasmOperand> {
 	return (inst.label != null) ? inst.label.accept(this) : null;
     }
     
-    public NasmOperand visit(C3a c3a){return null;}
+    public NasmOperand visit(C3a c3a){
+        for(C3aInst inst : c3a.listeInst) {
+            inst.accept(this);
+        }
+        return null;
+    }
 
     public NasmOperand visit(C3aInstAdd inst) {
         NasmOperand label = (inst.label != null) ? inst.label.accept(this) : null;
@@ -43,11 +48,41 @@ public class C3a2nasm implements C3aVisitor <NasmOperand> {
         nasm.ajouteInst(new NasmAdd(null, dest, oper2, ""));
         return null;
     }
-    public NasmOperand visit(C3aInstCall inst){return null;}
+    public NasmOperand visit(C3aInstCall inst){
 
-    public NasmOperand visit(C3aInstFBegin inst){return null;}
-    public NasmOperand visit(C3aInst inst){return null;}
-    public NasmOperand visit(C3aInstJumpIfLess inst){return null;}
+        return null;
+    }
+
+    public NasmOperand visit(C3aInstFBegin inst){
+
+        //inst.label.accept(this);
+        NasmOperand label = (inst.label != null) ? inst.label.accept(this) : null;
+
+        nasm.ajouteInst(new NasmPush(null, ebp, ""));
+        nasm.ajouteInst(new NasmMov(null, ebp, esp, ""));
+
+        nasm.ajouteInst(new NasmSub(label, esp, new NasmConstant(4*currentFct.getTable().variables.size()), ""));
+
+        return null;
+    }
+    public NasmOperand visit(C3aInst inst){
+        nasm.ajouteInst(new NasmAdd(null, esp, new NasmConstant(4), ""));
+        nasm.ajouteInst(new NasmPop(null, ebp, ""));
+        nasm.ajouteInst(new NasmRet(null, ""));
+
+        return null;}
+
+    public NasmOperand visit(C3aInstJumpIfLess inst){
+        NasmOperand label = (inst.label != null) ? inst.label.accept(this) : null;
+        NasmOperand op1 = inst.op1.accept(this);
+        NasmOperand op2 = inst.op2.accept(this);
+        // On traduit en comparaison puis saut conditionnel (JL)
+        nasm.ajouteInst(new NasmCmp(label, op1, op2, ""));
+        // Supposons que l'étiquette de destination se trouve dans inst.result
+        NasmOperand destLabel = inst.result.accept(this);
+        nasm.ajouteInst(new NasmJl(null, destLabel, ""));
+        return null;
+    }
 
     public NasmOperand visit(C3aInstMult inst){
         NasmOperand label = (inst.label != null) ? inst.label.accept(this) : null;
@@ -68,9 +103,33 @@ public class C3a2nasm implements C3aVisitor <NasmOperand> {
         nasm.ajouteInst(new NasmSub(null, dest, oper2, ""));
         return null;
     }
-    public NasmOperand visit(C3aInstAffect inst){return null;}
-    public NasmOperand visit(C3aInstDiv inst){return null;}
-    public NasmOperand visit(C3aInstFEnd inst){return null;}
+    public NasmOperand visit(C3aInstAffect inst){
+        NasmOperand label = (inst.label != null) ? inst.label.accept(this) : null;
+
+        NasmOperand source = inst.op1.accept(this);
+        NasmOperand dest = inst.result.accept(this);
+
+        nasm.ajouteInst(new NasmMov(label, dest, source, ""));
+        return null;
+    }
+
+    public NasmOperand visit(C3aInstDiv inst){
+        NasmOperand label = (inst.label != null) ? inst.label.accept(this) : null;
+
+        NasmRegister reg_eax = nasm.newRegister();
+        reg_eax.colorRegister(Nasm.REG_EAX);
+
+        NasmOperand oper1 = inst.op1.accept(this);
+        NasmOperand oper2 = inst.op2.accept(this);
+        NasmOperand result = inst.result.accept(this);
+        nasm.ajouteInst(new NasmMov(label,reg_eax, oper1, ""));
+        nasm.ajouteInst(new NasmDiv(null, oper2, ""));
+        nasm.ajouteInst(new NasmMov(label,result,reg_eax,""));
+        return null;}
+
+    public NasmOperand visit(C3aInstFEnd inst){
+        return null;
+    }
     public NasmOperand visit(C3aInstJumpIfEqual inst){return null;}
     public NasmOperand visit(C3aInstJumpIfNotEqual inst){return null;}
     public NasmOperand visit(C3aInstJump inst){return null;}
