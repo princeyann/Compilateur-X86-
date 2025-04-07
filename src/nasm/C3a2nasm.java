@@ -283,7 +283,26 @@ public class C3a2nasm implements C3aVisitor <NasmOperand> {
     }
 
     public NasmOperand visit(C3aVar oper) {
-        return null;
+        if(oper.item.isParam){
+            int taille = currentFct.table.getAdrArgCourante();
+            int adresseOp = oper.item.adresse;
+            return new NasmAddress(new NasmExpPlus(ebp, new NasmConstant( 8 + NasmSize.DWORD.getValue() * taille - adresseOp)), NasmSize.DWORD);
+
+        }
+        if (oper.item.portee == tableGlobale){
+            if(oper.index == null){
+                return new NasmAddress(new NasmLabel(oper.item.getIdentif()),NasmSize.DWORD);
+            }else {
+                NasmRegister eax = nasm.newRegister();
+                NasmOperand indice = oper.index.accept(this);
+                nasm.ajouteInst(new NasmMov(null,eax,indice,""));
+                nasm.ajouteInst(new NasmMul(null,eax,new NasmConstant(oper.item.type.taille()),""));
+                return new NasmAddress(new NasmExpPlus(new NasmLabel(oper.item.identif), eax), NasmSize.DWORD);
+
+
+            }
+        }
+        return new NasmAddress(new NasmExpMinus(ebp,new NasmConstant(4 - oper.item.adresse)),NasmSize.DWORD);
     }
 
     public NasmOperand visit(C3aFunction oper){
