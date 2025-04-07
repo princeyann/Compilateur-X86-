@@ -282,28 +282,35 @@ public class C3a2nasm implements C3aVisitor <NasmOperand> {
         return new NasmRegister(oper.num);
     }
 
+    @Override
     public NasmOperand visit(C3aVar oper) {
-        if(oper.item.isParam){
-            int taille = currentFct.table.getAdrArgCourante();
-            int adresseOp = oper.item.adresse;
-            return new NasmAddress(new NasmExpPlus(ebp, new NasmConstant( 8 + NasmSize.DWORD.getValue() * taille - adresseOp)), NasmSize.DWORD);
-
+        // Cas 1 : Paramètre d'une fonction
+        if (oper.item.isParam) {
+            int nbParams = currentFct.table.getAdrArgCourante(); // Nombre total de paramètres (en "adresse" = 4, 8, 12...)
+            int offset = 8 + (nbParams - oper.item.adresse); // calcul du déplacement par rapport à ebp
+            return new NasmAddress(new NasmExpPlus(ebp, new NasmConstant(offset)), NasmSize.DWORD);
         }
-        if (oper.item.portee == tableGlobale){
-            if(oper.index == null){
-                return new NasmAddress(new NasmLabel(oper.item.getIdentif()),NasmSize.DWORD);
-            }else {
-                NasmRegister eax = nasm.newRegister();
-                NasmOperand indice = oper.index.accept(this);
-                nasm.ajouteInst(new NasmMov(null,eax,indice,""));
-                nasm.ajouteInst(new NasmMul(null,eax,new NasmConstant(oper.item.type.taille()),""));
-                return new NasmAddress(new NasmExpPlus(new NasmLabel(oper.item.identif), eax), NasmSize.DWORD);
 
-
+        // Cas 2 : Variable globale
+        if (oper.item.portee == tableGlobale) {
+            if (oper.index == null) {
+                // Accès direct à une variable globale
+                return new NasmAddress(new NasmLabel(oper.item.getIdentif()), NasmSize.DWORD);
+            } else {
+                // Accès à un tableau global avec index dynamique
+                NasmRegister rIndex = nasm.newRegister();
+                NasmOperand indexOp = oper.index.accept(this); // on récupère l'expression de l'index
+                nasm.ajouteInst(new NasmMov(null, rIndex, indexOp, ""));
+                nasm.ajouteInst(new NasmMul(null, rIndex, new NasmConstant(oper.item.type.taille()), ""));
+                return new NasmAddress(new NasmExpPlus(new NasmLabel(oper.item.getIdentif()), rIndex), NasmSize.DWORD);
             }
         }
-        return new NasmAddress(new NasmExpMinus(ebp,new NasmConstant(4 - oper.item.adresse)),NasmSize.DWORD);
+
+        // Cas 3 : Variable locale
+        return new NasmAddress(new NasmExpMinus(ebp, new NasmConstant(oper.item.adresse)), NasmSize.DWORD);
     }
+
+
 
     public NasmOperand visit(C3aFunction oper){
         return new NasmLabel(oper.val.identif);
