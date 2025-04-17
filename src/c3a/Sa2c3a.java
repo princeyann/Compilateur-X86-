@@ -163,6 +163,7 @@ public class Sa2c3a extends SaDepthFirstVisitor <C3aOperand> {
         C3aOperand op = node.getTest().accept(this);
         C3aLabel etiquette0 = c3a.newAutoLabel();
         C3aLabel etiquette1 = c3a.newAutoLabel();
+
         c3a.ajouteInst(new C3aInstJumpIfEqual(op,c3a.False , etiquette0,""));
         node.getAlors().accept(this);
         c3a.ajouteInst(new C3aInstJump(etiquette1,""));
