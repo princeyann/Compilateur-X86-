@@ -21,6 +21,62 @@ public class FgSolution{
 	this.def = new HashMap< NasmInst, IntSet>();
 	this.in =  new HashMap< NasmInst, IntSet>();
 	this.out = new HashMap< NasmInst, IntSet>();
+		for (Iterator<NasmInst> it = nasm.sectionText.iterator(); it.hasNext();){
+			NasmInst inst = it.next();
+
+
+			use.put(inst,new IntSet(nasm.getTempCounter()));
+			def.put(inst,new IntSet(nasm.getTempCounter()));
+			in.put(inst,new IntSet(nasm.getTempCounter()));
+			out.put(inst,new IntSet(nasm.getTempCounter()));
+
+			if (inst.srcDef && inst.source.isGeneralRegister()){
+				NasmRegister source = (NasmRegister) inst.source;
+				def.get(inst).add(source.val);
+			}
+			if(inst.srcUse && inst.source.isGeneralRegister()){
+				NasmRegister source = (NasmRegister) inst.source;
+				use.get(inst).add(source.val);
+			}
+			if (inst.destDef && inst.destination.isGeneralRegister()){
+				NasmRegister destination = (NasmRegister) inst.destination;
+				def.get(inst).add(destination.val);
+			}
+			if(inst.destUse && inst.destination.isGeneralRegister()){
+				NasmRegister destination = (NasmRegister) inst.destination;
+				use.get(inst).add(destination.val);
+			}
+		}
+		boolean until;
+
+		do {
+			iterNum++;
+			until = false;
+			for (Iterator<NasmInst> it = nasm.sectionText.iterator(); it.hasNext();) {
+				NasmInst inst = it.next();
+				IntSet inCopy = in.get(inst).copy();
+				IntSet outCopy = out.get(inst).copy();
+
+				//on calcul in(s) = use(s) ∪ (out(s) − def(s))
+				IntSet inInst = use.get(inst).union(out.get(inst).minus(def.get(inst)));
+				in.put(inst, inInst);
+
+				//on calcul out(s) = union des in de tous les successeurs
+				IntSet outInst = new IntSet(nasm.getTempCounter());
+				Node node = fg.inst2Node.get(inst);
+				for (NodeList succ = node.succ(); succ != null; succ = succ.tail) {
+					NasmInst succInst = fg.node2Inst.get(succ.head);
+					outInst = outInst.union(in.get(succInst));
+				}
+				out.put(inst, outInst);
+
+				if (!inInst.equal(inCopy) || !outInst.equal(outCopy)) {
+					until = true;
+				}
+			}
+
+		}while (until);
+
     }
     
     public void affiche(String baseFileName){
