@@ -22,12 +22,92 @@ public class Ig {
 	this.regNb = this.nasm.getTempCounter();
 	this.int2Node = new Node[regNb];
 	this.build();
+
     }
     
     public void build(){
-    }
+		for(int i = 0; i < regNb; i++){
+			int2Node[i]=graph.newNode();
+		}
+		for(Iterator<NasmInst> iter = nasm.sectionText.iterator(); iter.hasNext(); ){
+			NasmInst inst = iter.next();
+			IntSet in = fgs.in.get(inst);
+			IntSet out = fgs.out.get(inst);
 
-    public void affiche(String baseFileName){
+			for(int i=0; i<regNb; i++){
+				if (in.isMember(i)){
+					for (int j = i+1; j < regNb; j++) {
+						if (in.isMember(j) && i!=j){
+							graph.addEdge(int2Node[i], int2Node[j]);
+							graph.addEdge(int2Node[j], int2Node[i]);
+						}
+					}
+				}
+			}
+			for(int i=0; i<regNb; i++){
+				if (out.isMember(i)){
+					for (int j = i+1; i < regNb; i++) {
+						if (out.isMember(j) && i!=j){
+							graph.addEdge(int2Node[i], int2Node[j]);
+							graph.addEdge(int2Node[j], int2Node[i]);
+						}
+					}
+				}
+			}
+		}
+
+
+    }
+	public int[] getPrecoloredTemporaries() {
+		int[] couleur = new int[regNb];
+		Arrays.fill(couleur, -1);
+
+		for (NasmInst inst : nasm.sectionText) {
+			if (inst.source instanceof NasmRegister) {
+				NasmRegister reg = (NasmRegister) inst.source;
+				if (reg.isGeneralRegister() && reg.color != Nasm.REG_UNK) {
+					couleur[reg.val] = reg.color;
+				}
+			}
+			if (inst.destination instanceof NasmRegister) {
+				NasmRegister reg = (NasmRegister) inst.destination;
+				if (reg.isGeneralRegister() && reg.color != Nasm.REG_UNK) {
+					couleur[reg.val] = reg.color;
+				}
+			}
+		}
+
+		return couleur;
+	}
+	public void allocateRegisters() {
+		ColorGraph colorGraph = new ColorGraph(graph, 4, getPrecoloredTemporaries());
+		colorGraph.color();
+		int[] color = colorGraph.color;
+
+		for (int i = 1; i < nasm.sectionText.size(); i++) {
+
+			if(nasm.sectionText.get(i).source!=null){
+				if (nasm.sectionText.get(i).source instanceof NasmRegister nasmRegister) {
+					if (!nasmRegister.isGeneralRegister() && nasmRegister.val != -1)
+						nasmRegister.colorRegister(color[nasmRegister.val]);
+				}
+			}
+			if(nasm.sectionText.get(i).destination!=null){
+				if (nasm.sectionText.get(i).destination instanceof NasmRegister nasmRegister) {
+					if (!nasmRegister.isGeneralRegister() && nasmRegister.val != -1)
+						nasmRegister.colorRegister(color[nasmRegister.val]);
+				}
+			}
+
+		}
+
+
+	}
+
+
+
+
+	public void affiche(String baseFileName){
 	String fileName;
 	PrintStream out = System.out;
 	

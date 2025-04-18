@@ -45,13 +45,13 @@ public class Compiler
 		buildFg();
 		System.out.println("[SOLVE FLOW GRAPH]");
 		solveFg();
-//		System.out.println("[BUILD INTERFERENCE GRAPH] ");
-//		buildIg();
-//		System.out.println("[ALLOCATE REGISTERS]");
-//		interferenceGraph.allocateRegisters();
-//		System.out.println("[PRINT NASM]");
-//		nasm.afficheNasm(baseName);
-//		System.exit(Error.NOERROR.code());
+		System.out.println("[BUILD INTERFERENCE GRAPH] ");
+		buildIg();
+		System.out.println("[ALLOCATE REGISTERS]");
+		interferenceGraph.allocateRegisters();
+		System.out.println("[PRINT NASM]");
+		nasm.afficheNasm(baseName);
+		System.exit(Error.NOERROR.code());
 	}
 
 	private static void processCommandLine(String[] args) {
