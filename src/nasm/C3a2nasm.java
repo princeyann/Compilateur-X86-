@@ -286,7 +286,7 @@ public class C3a2nasm implements C3aVisitor <NasmOperand> {
         if(oper.item.isParam){
             int taille = currentFct.table.getAdrArgCourante();
             int adresseOp = oper.item.adresse;
-            return new NasmAddress(new NasmExpPlus(ebp, new NasmConstant(2 * NasmSize.DWORD.getValue() + taille - adresseOp)), NasmSize.DWORD);
+            return new NasmAddress(new NasmExpPlus(ebp, new NasmConstant(8 + taille - adresseOp)), NasmSize.DWORD);
 
         }
         if (oper.item.portee == tableGlobale){
