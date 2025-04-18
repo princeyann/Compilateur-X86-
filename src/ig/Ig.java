@@ -39,7 +39,6 @@ public class Ig {
 					for (int j = i+1; j < regNb; j++) {
 						if (in.isMember(j) && i!=j){
 							graph.addEdge(int2Node[i], int2Node[j]);
-							graph.addEdge(int2Node[j], int2Node[i]);
 						}
 					}
 				}
@@ -49,7 +48,6 @@ public class Ig {
 					for (int j = i+1; i < regNb; i++) {
 						if (out.isMember(j) && i!=j){
 							graph.addEdge(int2Node[i], int2Node[j]);
-							graph.addEdge(int2Node[j], int2Node[i]);
 						}
 					}
 				}
@@ -65,18 +63,17 @@ public class Ig {
 		for (NasmInst inst : nasm.sectionText) {
 			if (inst.source instanceof NasmRegister) {
 				NasmRegister reg = (NasmRegister) inst.source;
-				if (reg.isGeneralRegister() && reg.color != Nasm.REG_UNK) {
+				if (reg.isGeneralRegister()) {
 					couleur[reg.val] = reg.color;
 				}
 			}
 			if (inst.destination instanceof NasmRegister) {
 				NasmRegister reg = (NasmRegister) inst.destination;
-				if (reg.isGeneralRegister() && reg.color != Nasm.REG_UNK) {
+				if (reg.isGeneralRegister()) {
 					couleur[reg.val] = reg.color;
 				}
 			}
 		}
-
 		return couleur;
 	}
 	public void allocateRegisters() {
@@ -86,26 +83,17 @@ public class Ig {
 
 		for (int i = 1; i < nasm.sectionText.size(); i++) {
 
-			if(nasm.sectionText.get(i).source!=null){
-				if (nasm.sectionText.get(i).source instanceof NasmRegister nasmRegister) {
-					if (!nasmRegister.isGeneralRegister() && nasmRegister.val != -1)
+			if (nasm.sectionText.get(i).source instanceof NasmRegister nasmRegister) {
+					if (nasmRegister.isGeneralRegister() && nasmRegister.val != -1)
 						nasmRegister.colorRegister(color[nasmRegister.val]);
-				}
-			}
-			if(nasm.sectionText.get(i).destination!=null){
-				if (nasm.sectionText.get(i).destination instanceof NasmRegister nasmRegister) {
-					if (!nasmRegister.isGeneralRegister() && nasmRegister.val != -1)
-						nasmRegister.colorRegister(color[nasmRegister.val]);
-				}
 			}
 
+			if (nasm.sectionText.get(i).destination instanceof NasmRegister nasmRegister) {
+				if (nasmRegister.isGeneralRegister() && nasmRegister.val != -1)
+					nasmRegister.colorRegister(color[nasmRegister.val]);
+			}
 		}
-
-
 	}
-
-
-
 
 	public void affiche(String baseFileName){
 	String fileName;
