@@ -24,7 +24,7 @@ public class Ig {
 	this.build();
 
     }
-    
+
     public void build(){
 		for(int i = 0; i < regNb; i++){
 			int2Node[i]=graph.newNode();
@@ -42,16 +42,16 @@ public class Ig {
 						}
 					}
 				}
-			}
-			for(int i=0; i<regNb; i++){
 				if (out.isMember(i)){
-					for (int j = i+1; i < regNb; i++) {
+					for (int j = i+1; j < regNb; j++) {
 						if (out.isMember(j) && i!=j){
 							graph.addEdge(int2Node[i], int2Node[j]);
 						}
 					}
 				}
 			}
+
+
 		}
 
 
