@@ -46,7 +46,7 @@ public class Fg implements NasmVisitor <Void> {
                 }
 
             }
-            if (!(inst instanceof NasmRet || inst instanceof NasmCall || inst instanceof NasmJmp)){
+            if (!(inst instanceof NasmRet || inst instanceof NasmJmp)){
                 if (currentNode.label()+1 < nasm.sectionText.size()){
                     graph.addEdge(currentNode, inst2Node.get(nasm.sectionText.get(currentNode.label()+1)));
 
