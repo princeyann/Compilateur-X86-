@@ -24,38 +24,30 @@ public class Ig {
 	this.build();
 
     }
+	public void build(){
+		for(NasmInst inst : fgs.in.keySet()) {
+			IntSet liveSet = fgs.in.get(inst);
+			List<Node> nodeList = new ArrayList<>();
 
-    public void build(){
-		for(int i = 0; i < regNb; i++){
-			int2Node[i]=graph.newNode();
-		}
-		for(Iterator<NasmInst> iter = nasm.sectionText.iterator(); iter.hasNext(); ){
-			NasmInst inst = iter.next();
-			IntSet in = fgs.in.get(inst);
-			IntSet out = fgs.out.get(inst);
-
-			for(int i=0; i<regNb; i++){
-				if (in.isMember(i)){
-					for (int j = i+1; j < regNb; j++) {
-						if (in.isMember(j) && i!=j){
-							graph.addEdge(int2Node[i], int2Node[j]);
-						}
-					}
+			for(int reg =0; reg < liveSet.getSize(); reg++) {
+				if (int2Node[reg] == null) {
+					int2Node[reg] = graph.newNode();
 				}
-				if (out.isMember(i)){
-					for (int j = i+1; j < regNb; j++) {
-						if (out.isMember(j) && i!=j){
-							graph.addEdge(int2Node[i], int2Node[j]);
-						}
-					}
+				if (liveSet.isMember(reg)){
+					nodeList.add(int2Node[reg]);
 				}
 			}
 
-
+			for (int i = 0; i < nodeList.size();i++){
+				for (int j = 0; j < nodeList.size(); j++) {
+					if (i!=j){
+						graph.addEdge(nodeList.get(i), nodeList.get(j));
+					}
+				}
+			}
 		}
+	}
 
-
-    }
 	public int[] getPrecoloredTemporaries() {
 		int[] couleur = new int[regNb];
 		Arrays.fill(couleur, -1);
