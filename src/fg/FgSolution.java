@@ -38,6 +38,15 @@ public class FgSolution{
 				NasmRegister source = (NasmRegister) inst.source;
 				use.get(inst).add(source.val);
 			}
+			if (inst.source instanceof NasmAddress op ){
+				List<NasmRegister> sources = op.val.getRegisters();
+				for (NasmRegister dest : sources) {
+					if (dest.isGeneralRegister()){
+						use.get(inst).add(dest.val);
+					}
+				}
+			}
+
 			if (inst.destDef && inst.destination.isGeneralRegister()){
 				NasmRegister destination = (NasmRegister) inst.destination;
 				def.get(inst).add(destination.val);
@@ -46,7 +55,17 @@ public class FgSolution{
 				NasmRegister destination = (NasmRegister) inst.destination;
 				use.get(inst).add(destination.val);
 			}
+			if (inst.destination instanceof NasmAddress op && op.val != null){
+				List<NasmRegister> destination = op.val.getRegisters();
+				for (NasmRegister dest : destination) {
+					if (dest.isGeneralRegister()){
+						use.get(inst).add(dest.val);
+					}
+				}
+			}
+
 		}
+
 		boolean until;
 
 		do {
