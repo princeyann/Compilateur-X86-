@@ -2,52 +2,13 @@
 
 ## Pour commencer
 
-Vous devez créer un “fork” du dépôt, avec le nom suivant : **2025_compilation_X_Y**, où X est le nom du premier membre du binôme et Y le nom du second membre du binôme, par exemple
-_2025_compilation_macron_borne_.
-
-Votre fork doit être PRIVE et vous devez ajouter comme membre en qualité de Maintainer votre responsable de TP.
-
-Ensuite vous pourrez faire un clone du “nouveau” dépôt créé, où **monId** est votre identifiant etulab :
-
-```console
-# Vous demandera votre login/mdp à chaque pull/push
-git clone https://etulab.univ-amu.fr/monId/2025_compilation_X_Y.git
-# Ou alors, si votre clé SSH est bien configurée sur etulab
-git clone git@etulab.univ-amu.fr:monID/2025_compilation_X_Y.git
-```
-
-Pour donner le nom **squelette**, par exemple, au dépôt d’origine afin de garder le lien avec lui, on fait :
-
-```console
-git remote add squelette https://etulab.univ-amu.fr/nasr/2025_compilation
-```
-
-Ensuite, lors des TP suivants, vous pourrez mettre à jour votre dépôt en faisant :
-
-```console
-git pull squelette main
-```
+Vous devez créer un “fork” du dépôt
 
 ## Utilisation
 
-### Chaque TP
 
 Le fichier **Compiler.java** est le fichier principal qui pilote les différentes parties du compilateur que nous allons construire.
 
-À chaque TP, nous décommenterons une ligne du fichier **Compiler.java** afin d'ajouter la fonctionnalité que nous avons développée.
-
-Exemple TP1 :
-
-```java
-	public static void main(String[] args) {
-		processCommandLine(args);
-		System.out.println("[BUILD SC] ");
-//		buildSc(); // <-- décommenter cette ligne
-//		System.out.println("[BUILD SA] ");
-```
-
-### TP1
-Objectif : programmer un analyseur lexical et un analyseur syntaxique pour le langage L. Les deux analyseurs sont produits automatiquement avec le logiciel **sablecc**, à partir d’un fichier de spécification **l.cfg**.
 
 * Générer les analyseurs pour la grammaire l.cfg
 ```console
